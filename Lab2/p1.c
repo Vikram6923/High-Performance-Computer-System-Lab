@@ -2,12 +2,9 @@
 #include <stdlib.h>
 #include <omp.h>
 
-// global variables
-
 int main(int argc, char* argv[]) {
     int n; // number of elements in the arrays
     int n_t; // number of threads
-    int c;
     int* A;
     int* B;
     int* C;
@@ -17,7 +14,6 @@ int main(int argc, char* argv[]) {
     scanf("%d", &n);
     printf("Enter the number of threads: ");
     scanf("%d", &n_t);
-    c = n/n_t + (n%n_t!=0);
 
     A = malloc(n * sizeof(int));
     B = malloc(n * sizeof(int));
@@ -28,17 +24,19 @@ int main(int argc, char* argv[]) {
         B[i] = rand() % 20 + 1;
     }
 
-    #pragma omp for
-    {
-        for (int i = 0; i < n; i++) {
-            C[i] = A[i] + B[i];
-        }
+    double start_time = omp_get_wtime();
+    omp_set_num_threads(n_t);
+    #pragma omp parallel for
+    for (int i = 0; i < n; i++) {
+        C[i] = A[i] + B[i];
     }
+    double end_time = omp_get_wtime();
 
     // print the results
     for (int i = 0; i < n; i++) {
         printf("%d + %d = %d\n", A[i], B[i], C[i]);
     }
+    printf("Time taken : %f s\n",end_time-start_time);
 
     // free allocated memory
     free(A);
