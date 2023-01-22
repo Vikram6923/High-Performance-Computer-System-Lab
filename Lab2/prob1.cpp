@@ -38,9 +38,9 @@ int main(int argc, char* argv[]) {
     double end_time = omp_get_wtime();
 
     // print the results
-    for (int i = 0; i < n; i++) {
-        cout << A[i] << " + " << B[i] << " = " << C[i] << endl;
-    }
+    // for (int i = 0; i < n; i++) {
+    //     cout << A[i] << " + " << B[i] << " = " << C[i] << endl;
+    // }
     cout << "Time taken : "<<end_time-start_time<<" s" << endl;
 
     return 0;

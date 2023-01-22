@@ -33,9 +33,9 @@ int main(int argc, char* argv[]) {
     double end_time = omp_get_wtime();
 
     // print the results
-    for (int i = 0; i < n; i++) {
-        printf("%d + %d = %d\n", A[i], B[i], C[i]);
-    }
+    // for (int i = 0; i < n; i++) {
+    //     printf("%d + %d = %d\n", A[i], B[i], C[i]);
+    // }
     printf("Time taken : %f s\n",end_time-start_time);
 
     // free allocated memory
