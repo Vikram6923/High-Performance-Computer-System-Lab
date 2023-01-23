@@ -7,6 +7,7 @@ int main(int argc, char* argv[]) {
     int n; // number of elements in the arrays
     int n_t; // number of threads
     int c;
+    long long int sum = 0;
 
     // read in values of n and n_t
     if (argc < 3) {
@@ -29,30 +30,15 @@ int main(int argc, char* argv[]) {
 
     double start_time = omp_get_wtime();
     omp_set_num_threads(n_t);
-    #pragma omp parallel 
-    {
-        int tid = omp_get_thread_num();
-        int start = tid * c;
-        int end = start + c;
-
-        // check if this is the last thread
-        if (end > n) {
-            end = n;
-        }
-
-        long long local_sum = 0;
-        for (int i = start; i < end; i++) {
-            local_sum += A[i];
-        }
-        sum += local_sum;
+    #pragma omp parallel for reduction( + : sum )
+        for (int i = 0; i < n; i++) {
+            sum += A[i];
     }
     double end_time = omp_get_wtime();
 
     // print the results
-    // for (int i = 0; i < n; i++) {
-    //     cout << A[i] << " + " << B[i] << " = " << C[i] << endl;
-    // }
-    cout << "Time taken : "<<end_time-start_time<<" s" << endl;
+    printf("Sum: %lld\n", sum);
+    printf("Time taken : %f s\n", end_time-start_time);
 
     return 0;
 }

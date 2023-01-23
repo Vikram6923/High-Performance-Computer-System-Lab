@@ -26,16 +26,16 @@ int main(int argc, char* argv[]) {
 
     double start_time = omp_get_wtime();
     omp_set_num_threads(n_t);
-    #pragma omp parallel for
+    #pragma omp parallel for shared(A, B, C)
     for (int i = 0; i < n; i++) {
         C[i] = A[i] + B[i];
     }
     double end_time = omp_get_wtime();
 
     // print the results
-    // for (int i = 0; i < n; i++) {
-    //     printf("%d + %d = %d\n", A[i], B[i], C[i]);
-    // }
+    for (int i = 0; i < n; i++) {
+        printf("%d + %d = %d\n", A[i], B[i], C[i]);
+    }
     printf("Time taken : %f s\n",end_time-start_time);
 
     // free allocated memory

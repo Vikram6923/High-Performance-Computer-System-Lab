@@ -24,22 +24,9 @@ int main(int argc, char* argv[]) {
 
     double start_time = omp_get_wtime();
     omp_set_num_threads(n_t);
-    #pragma omp parallel 
-    {
-        int tid = omp_get_thread_num();
-        int start = tid * c;
-        int end = start + c;
-
-        // check if this is the last thread
-        if (end > n) {
-            end = n;
-        }
-
-        long long local_sum = 0;
-        for (int i = start; i < end; i++) {
-            local_sum += A[i];
-        }
-        sum += local_sum;
+    #pragma omp parallel for reduction( + : sum )
+        for (int i = 0; i < n; i++) {
+            sum += A[i];
     }
 
     double end_time = omp_get_wtime();
