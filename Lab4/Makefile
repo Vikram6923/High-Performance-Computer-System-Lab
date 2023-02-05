@@ -1,8 +1,10 @@
-all: prefixsum
+all: prefixsum reducearray
 
 clean:
-	rm -f p
+	rm -f p r
 	
 prefixsum: prefixsum.cpp
 	g++ -o p -fopenmp prefixsum.cpp
-	./p 16 4
+
+reducearray: reducearray.cpp
+	g++ -o r -fopenmp reducearray.cpp
