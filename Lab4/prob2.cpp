@@ -6,6 +6,8 @@ using namespace std;
 int main(int argc, char* argv[]) {
     int n; // number of elements in the arrays
     int n_t; // number of threads
+    int c;
+    long long int sum = 0;
 
     // read in values of n and n_t
     if (argc < 3) {
@@ -18,30 +20,25 @@ int main(int argc, char* argv[]) {
         n = atoi(argv[1]);
         n_t = atoi(argv[2]);
     }
-
+    c = n/n_t + (n%n_t!=0);
 
     vector<int> A(n);
-    vector<int> B(n);
-    vector<int> C(n);
 
     for (int i = 0; i < n; i++) {
         A[i] = rand() % 20 + 1;
-        B[i] = rand() % 20 + 1;
     }
 
     double start_time = omp_get_wtime();
     omp_set_num_threads(n_t);
-    #pragma omp parallel for
-    for (int i = 0; i < n; i++) {
-        C[i] = A[i] + B[i];
+    #pragma omp parallel for reduction( + : sum )
+        for (int i = 0; i < n; i++) {
+            sum += A[i];
     }
     double end_time = omp_get_wtime();
 
     // print the results
-    // for (int i = 0; i < n; i++) {
-    //     cout << A[i] << " + " << B[i] << " = " << C[i] << endl;
-    // }
-    cout << "Time taken : "<<end_time-start_time<<" s" << endl;
+    printf("Sum: %lld\n", sum);
+    printf("Time taken : %f s\n", end_time-start_time);
 
     return 0;
 }
