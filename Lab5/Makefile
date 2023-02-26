@@ -1,10 +1,7 @@
-all: prefixsum reducearray
+all: p2
 
 clean:
-	rm -f p r
+	rm -f p2
 	
-prefixsum: prefixsum.cpp
-	g++ -o p -fopenmp prefixsum.cpp
-
-reducearray: reducearray.cpp
-	g++ -o r -fopenmp reducearray.cpp
+p2: prob2.cpp
+	g++ -o p2 -fopenmp prob2.cpp
