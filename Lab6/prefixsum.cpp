@@ -12,19 +12,20 @@ int max_num(int x, int y) {
     return x > y ? x : y;
 }
 
-void nearestPowerOfTwo(int &n, vector<int> &A) {
+int* nearestPowerOfTwo(int &n, int* A) {
     int a = log2(n);
     if (pow(2, a) == n)
-        return;
+        return A;
     n = pow(2, a + 1);
-    A.resize(n, 0);
+    int* newA = new int[n]();
+    std::copy(A, A + n, newA);
+    return newA;
 }
 
-vector<int> inplace_prefix_sum(vector<int> A) {
-    int n = A.size();
+int* inplace_prefix_sum(int A[], int n) {
     int x = 2;
     // Resize the array to the nearest next power of 2
-    nearestPowerOfTwo(n, A);
+    A = nearestPowerOfTwo(n, A);
 
     while (x <= n) {
         #pragma pragma omp parallel for collapse(2)
@@ -37,37 +38,37 @@ vector<int> inplace_prefix_sum(vector<int> A) {
     return A;
 }
 
-vector<int> inplace_prefix_sum_p(vector<int> A) {
-    int n = A.size();
+int* inplace_prefix_sum_p(int A[], int n) {
     int x = 1;
     // Resize the array to the nearest next power of 2
-    nearestPowerOfTwo(n, A);
+    A = nearestPowerOfTwo(n, A);
 
-    vector<int> B = A;
+    int* B = new int[n];
+    std::copy(A, A + n, B);
 
     while (x <= n) {
         #pragma omp parallel for 
         for (int i = x - 1; i < n; i++) {
             B[i] += A[i - x];
         }
-        A = B;
+        std::copy(B, B + n, A);
         x = x * 2;
     }
     return A;
 }
 
-vector<int> prefix_sum(vector<int> A, int (*func)(int, int)) {
-    int n = A.size();
-    int t = n;
-    // Resize the array to the nearest next power of 2
-    nearestPowerOfTwo(n, A);
 
-    vector<int> M(2*n);
-    vector<int> L(n);
-    vector<int> R(2 * n);
-    vector<int> prefixsum(n);
+int* prefix_sum(int A[], int n, int (*func)(int, int)) {
+    // Resize the array to the nearest next power of 2
+    A = nearestPowerOfTwo(n, A);
+
+    int* M = new int[2*n];
+    // int* L = new int[n];
+    int* R = new int[2* n];
+    int* prefixsum = new int[n];
 
     // Bottom-up phase
+    M[0] = 0;
     #pragma omp parallel for
     for (int i = n; i < 2*n; i++) {
         M[i] = A[i - n];
@@ -77,16 +78,11 @@ vector<int> prefix_sum(vector<int> A, int (*func)(int, int)) {
     //     cout << x << " ";
     // cout << endl;
 
-    // for (int i = n - 1; i > 0; i--) {
-    //     M[i] = M[2*i] + M[2*i + 1];
-    // }
     int offset = n;
     for (int r = 1; r <= log2(n); r++) {
         offset /= 2;
-        // cout << m << "," << offset << endl;
         #pragma omp parallel for
         for (int i = offset; i < 2* offset; i++) {
-            // M[i] = M[2*i] + M[2*i + 1];
             M[i] = func(M[2*i], M[2*i + 1]);
         }
     }
@@ -96,10 +92,11 @@ vector<int> prefix_sum(vector<int> A, int (*func)(int, int)) {
     // cout << endl;
 
     // Top-to-down phase
-    #pragma omp parallel for
-    for (int i = 1; i < n; i++) {
-        L[i] = M[2*i];
-    }
+    // L[0] = 0;
+    // #pragma omp parallel for
+    // for (int i = 1; i < n; i++) {
+    //     L[i] = M[2*i];
+    // }
     // cout << "L: ";
     // for (auto x: L)
     //     cout << x << " ";
@@ -107,32 +104,14 @@ vector<int> prefix_sum(vector<int> A, int (*func)(int, int)) {
 
     // Final phase
 
-    // for (int i = 0; i < 2*n; i++) {
-    //     if (i % 2 == 0) {
-    //         R[i] = R[i/2];
-    //     }
-    //     else {
-    //         R[i] = R[i/2] + L[i/2];
-    //     }
-    // }
     R[0] = 0;
     int m = 1;
-    for (int r = 1; r <= log2(n); r++) {
-        // int m = pow(2, r);
-        // #pragma omp parallel for
-        // for (int i = m; i < 2 * m; i++) {
-        //     if (i % 2 == 0) {
-        //         R[i] = R[i/2];
-        //     }
-        //     else {
-        //         R[i] = func(R[i/2], L[i/2]);
-        //     }
-        // }
+    for (int r = 1; r <= log2(n) + 1; r++) {
         int j = 0;
-        #pragma omp parallel for 
+        // #pragma omp parallel for 
         for (int i = m; i < 2 * m; i+=2) {
-            R[i] = R[j];
-            R[i+1] = func(R[j], L[j]);
+            R[i] = R[i/2];
+            R[i+1] = func(R[i/2], M[i]);
             j++;
         }
         m *= 2;
@@ -149,7 +128,10 @@ vector<int> prefix_sum(vector<int> A, int (*func)(int, int)) {
     }
 
     // Resize prefixsum to the original size of A
-    prefixsum.resize(t);
+    // prefixsum.resize(t);
+    delete[] M;
+    // delete[] L;
+    delete[] R;
     return prefixsum;
 }
 
@@ -179,8 +161,9 @@ int main(int argc, char* argv[]) {
         n = atoi(argv[1]);
         n_t = atoi(argv[2]);
     }
+    omp_set_num_threads(n_t);
 
-    vector<int> A(n);
+    int* A = new int[n]();
 
     // for (int i = 0; i < n; i++) {
     //     A[i] = rand() % 20 + 1;
@@ -188,24 +171,30 @@ int main(int argc, char* argv[]) {
     for (int i = 0; i < n; i++) {
         A[i] = i + 1;
     }
-    cout << "A: ";
-    for (int i = 0; i < n; i++) {
-        cout << A[i] << " ";
+    if (n <= 256) {
+        cout << "A: ";
+        for (int i = 0; i < n; i++) {
+            cout << A[i] << " ";
+        }
+        cout << endl;
     }
-    cout << endl;
 
-    vector<int> prefixsum;
+    int* prefixsum;
     double start_time = omp_get_wtime();
-    prefixsum =  prefix_sum(A, max_num);
+    prefixsum = prefix_sum(A, n, add_num);
     double end_time = omp_get_wtime();
 
     // print out the array
-    cout << "B: ";
-    for (int i = 0; i < prefixsum.size(); i++) {
-        cout << prefixsum[i] << " ";
+    if (n <= 256) {
+        cout << "B: ";
+        for (int i = 0; i < n; i++) {
+            cout << prefixsum[i] << " ";
+        }
+        cout << endl;
     }
-    cout << endl;
     printf("Time taken : %f s\n", end_time-start_time);
+    delete[] A;
+    delete[] prefixsum;
 
     return 0;
 }
