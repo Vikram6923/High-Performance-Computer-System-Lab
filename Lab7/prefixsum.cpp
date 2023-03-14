@@ -65,9 +65,11 @@ int* inplace_prefix_sum_p(int A[], int n) {
 int* prefix_sum(int A[], int n, int (*f1)(int), int (*f2)(int, int)) {
     // Resize the array to the nearest next power of 2
     int a = log2(n);
+    // cout << "a: " << a << endl;
     if (pow(2, a) != n)
         A = nearestPowerOfTwo(n, A);
     int log2n = log2(n);
+    // cout << "Test: " << log2n << endl;
 
     int* M = new int[2*n];
     // int* L = new int[n];
@@ -205,6 +207,7 @@ int main(int argc, char* argv[]) {
         }
         cout << endl;
     }
+    cout << "Array is initialized of size " << n << endl;
 
     int* prefixsum;
     double start_time = omp_get_wtime();
