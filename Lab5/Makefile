@@ -1,7 +1,7 @@
-all: p2
+all: prob2.o
 
 clean:
 	rm -f p2
 	
-p2: prob2.cpp
+prob2.o: prob2.cpp
 	g++ -o p2 -fopenmp prob2.cpp

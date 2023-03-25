@@ -2,6 +2,7 @@
 #include <vector>
 #include <omp.h>
 #include <math.h>
+#include <climits>
 using namespace std;
 
 int add_num(int x, int y) {
