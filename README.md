@@ -1,2 +1,2 @@
 # High Performance Computer Systems Lab
- IIT Jammu course lab
+ College course lab
