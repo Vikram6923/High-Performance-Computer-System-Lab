@@ -76,11 +76,12 @@ void LinkedList::insert(int data) {
     }
 
     // Insert the new node at the correct position in the list
-    if (previous == NULL) {
-        new_node->next = head;
-        head = new_node;
-    }
-    else {
+    // if (previous == NULL) {
+    //     new_node->next = head;
+    //     head = new_node;
+    // }
+    // else 
+    {
         new_node->next = current;
         previous->next = new_node;
     }
@@ -195,7 +196,7 @@ int main(int argc, char* argv[]){
     printf("Size after insert: %d\n", list->size());
 
     #pragma omp parallel for
-    for (int i = n/4; i < 6*n/4; i++) 
+    for (int i = n/4; i < 3*n/4; i++) 
     {
         // int data = rand() % (n - 20) + 10;
         // printf("Deleting %d\n", data);
@@ -222,6 +223,32 @@ int main(int argc, char* argv[]){
         }
     }
     printf("Found: %d, Not found: %d\n", found, not_found);
+
+    int temp = 0;
+    #pragma omp parallel shared(temp)
+    {
+        // int tid = omp_get_thread_num();
+        #pragma omp for
+        for (int i = 1; i < 1000; i++) {
+            int op = rand() % 2; // 0 = insert, 1 = delete
+            int data = i;
+
+            if (op == 0) {
+                list->insert(data);
+            }
+            else {
+                list->deleteNode(data);
+            }
+            #pragma omp critical 
+            {
+            temp += (op == 0) ? 1 : -1;
+            }
+        }
+    }
+    cout << "insert - delete = " << temp << endl;
+    printf("Size: %d\n", list->size());
+    //print pointer of head
+    // printf("Head: %p\n", list->head);
 
     return 0;
 }
