@@ -1,17 +1,14 @@
 CXX := g++
 FLAGS := -fopenmp
-TARGETS := prefixsum test cas
+TARGETS :=  test prefixsum
 
 all: $(TARGETS)
 
 clean:
 	rm -f $(TARGETS)
-	
-prefixsum: prefixsum.cpp
-	$(CXX) $(FLAGS) -o $@ $<
 
 test: test.cpp
 	$(CXX) $(FLAGS) -o $@ $<
 
-cas: cas.cpp
+prefixsum: prefixsum.cpp
 	$(CXX) $(FLAGS) -o $@ $<

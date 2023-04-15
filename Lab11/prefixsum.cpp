@@ -55,10 +55,8 @@ public:
         }
     }
     void print() {
-        Node<T>* curr = this->head;
-        while (curr != NULL) {
-            cout << curr->value << " ";
-            curr = curr->next;
+        for (auto i : array) {
+            cout << i->value << " ";
         }
         cout << endl;
     }
@@ -89,73 +87,57 @@ List<T> sequentialPrefixSum(const List<T>& A) {
 
 template<typename T, typename F1, typename F2>
 List<T> prefix_sum(List<T> A, int n, F1 f1, F2 f2) {
-    int log2n = log2(n);
-
-    vector<T> M(2*n);
-    vector<T> R(2*n);
-
-    // Declaring offsets
-    int offsets[log2n + 2];
-    int offset = n << 1;
-    for (int i = 0; i <= log2n + 1; i++) {
-        offsets[i] = offset >> i;
-    }
-
-    // Bottom-up phase
-    M[0] = T();
-    #pragma omp parallel for schedule(static, 1024)
-    for (int i = n; i < 2*n; i++) {
-        M[i] = f1(A.array[i-n]->value);
-    }
-
-    for (int r = 1; r <= log2n; r++) {
-        #pragma omp parallel for schedule(static, 1024)
-        for (int i = offsets[r + 1]; i < offsets[r]; i += 2) {
-            M[i] = f2(M[2 * i], M[2 * i + 1]);
-            M[i + 1] = f2(M[2 * (i + 1)], M[2 * (i + 1) + 1]);
+    while (A.head->next != NULL)
+    {
+        #pragma omp parallel shared(A)
+        {
+            vector<Node<T>*> nextnext(n);
+            vector<T> listval(n);
+            
+            #pragma omp for //schedule(static, 1024)
+            for (int i = 0; i < n; i++) {
+                if (A.array[i]->next != NULL ) {
+                    nextnext[i] = A.array[i]->next->next;
+                    listval[i] = f2(A.array[i]->value, A.array[i]->next->value);
+                }
+                else {
+                    nextnext[i] = NULL;
+                    listval[i] = A.array[i]->value;
+                }
+            }
+            #pragma omp barrier
+            #pragma omp for 
+            for (int i = 0; i < n; i++) {
+                if (A.array[i]->next != NULL) {
+                    A.array[i]->value = listval[i];
+                }
+                A.array[i]->next = nextnext[i];
+            }
         }
     }
-
-    R[0] = R[1] = T();
-    int m = log2n + 1;
-    for (int r = 2; r <= log2n + 1; r++) {
-        #pragma omp parallel for schedule(static, 1024)
-        for (int i = offsets[m]; i < offsets[m - 1]; i++) {
-            R[2*i] = R[i];
-            R[2*i + 1] = f2(R[i], M[2*i]);
-        }
-        m--;
-    }
-
-    List<T> prefixSum(n);
-    #pragma omp parallel for schedule(static, 1024)
-    for (int i = 0; i < n; i++) {
-        prefixSum.array[i]->value = f2(R[i + n], A.array[i]->value);
-    }
-
-    return prefixSum;
+    return A;
 }
 
-template <typename T = int>
+template <typename T = string>
 void compact_array(int n) {
     // Initialize array A with random values
     List<T> A;
-    // for (int i = 0; i < n; i++) {
-    //     A.addNode(rand() % 2 == 0 ? "0" : "-1");
-    // }
-    // for (int i = 0; i < n; i++) {
-    //     if (A.array[i]->value != "-1") {
-    //         A.array[i]->value = "str" + to_string(rand() % 10 + 1);
-    //     }
-    // }
     for (int i = 0; i < n; i++) {
-        A.addNode(rand() % 2 - 1);
+        A.addNode(rand() % 2 == 0 ? "0" : "-1");
     }
     for (int i = 0; i < n; i++) {
-        if (A.array[i]->value != -1) {
-            A.array[i]->value = rand() % 10 + 1;
+        if (A.array[i]->value != "-1") {
+            A.array[i]->value = "str" + to_string(rand() % 10 + 1);
         }
     }
+    // for (int i = 0; i < n; i++) {
+    //     A.addNode(rand() % 2 - 1);
+    // }
+    // for (int i = 0; i < n; i++) {
+    //     if (A.array[i]->value != -1) {
+    //         A.array[i]->value = rand() % 10 + 1;
+    //     }
+    // }
 
     auto f1 = [](int x) -> int { return x; };
     auto f2 = [](int x, int y) -> int { return x + y; };
@@ -164,21 +146,24 @@ void compact_array(int n) {
         cout << "Array A: " << A;
     }
     List<int> B(n);
+    List<int> C(n);
 
     // compact the array A
     double start_time, end_time;
     start_time = omp_get_wtime();
     #pragma omp parallel for schedule(static, 1024)
     for (int i = 0; i < n; i++) {
-        B.array[i]->value = (A.array[i]->value != -1) ? 1 : 0;
+        B.array[n-i-1]->value = (A.array[i]->value != "-1") ? 1 : 0;
+        C.array[n-i-1]->value = (A.array[i]->value != "-1") ? 1 : 0;
     }
-    List<int> C = prefix_sum(B, n, f1, f2);
-    List<T> D(C.array[n - 1]->value);
+    C = prefix_sum(C, n, f1, f2);
+    List<T> D(C.array[0]->value);
 
+    // cout << "B: " << B << "C: " << C;
     #pragma omp parallel for schedule(static, 1024)
     for (int i = 0; i < n; i++) {
-        if (B.array[i]->value == 1) {
-            D.array[C.array[i]->value - 1]->value = A.array[i]->value;
+        if (B.array[n-i-1]->value == 1) {
+            D.array[C.array[n-i-1]->value - 1]->value = A.array[i]->value;
         }
     }
     end_time = omp_get_wtime();
@@ -198,7 +183,7 @@ void doprefixsum(int n, int option) {
             A.addNode(T(1));
         }
     } else if (option == 2) {
-        for (int i = 0; i < n; i++) {
+        for (int i = n - 1; i >=0; i--) {
             A.addNode(T(i + 1));
         }
     } else if (option == 3) {
@@ -219,8 +204,9 @@ void doprefixsum(int n, int option) {
         cout << "A : " << A;
     }
 
-    auto f1 = [](int x) -> int { return x; };
-    auto f2 = [](int x, int y) -> int { return x + y; };
+    auto f1 = [](T x) -> T { return x; };
+    auto f2 = [](T x, T y) -> T {return x + y; };
+    // auto f2 = [](T x, T y) -> T { return x < y ? x : y; };
 
     double start = omp_get_wtime();
     List<T> B = prefix_sum(A, n, f1, f2);
@@ -230,6 +216,7 @@ void doprefixsum(int n, int option) {
         cout << "B : " << B;
     }
     cout << "Time taken: " << end - start << endl;
+    cout << "Fist element of B: " << B.head->value << endl;
     cout << "Last element of B: " << B.array[n-1]->value << endl;
 }
 
