@@ -87,9 +87,10 @@ List<T> sequentialPrefixSum(const List<T>& A) {
 
 template<typename T, typename F1, typename F2>
 List<T> prefix_sum(List<T> A, int n, F1 f1, F2 f2) {
-    while (A.head->next != NULL)
+    while (1)
     {
-        #pragma omp parallel shared(A)
+        bool flag = false;
+        #pragma omp parallel shared(A, flag)
         {
             vector<Node<T>*> nextnext(n);
             vector<T> listval(n);
@@ -99,6 +100,7 @@ List<T> prefix_sum(List<T> A, int n, F1 f1, F2 f2) {
                 if (A.array[i]->next != NULL ) {
                     nextnext[i] = A.array[i]->next->next;
                     listval[i] = f2(A.array[i]->value, A.array[i]->next->value);
+                    flag = true;
                 }
                 else {
                     nextnext[i] = NULL;
@@ -113,6 +115,9 @@ List<T> prefix_sum(List<T> A, int n, F1 f1, F2 f2) {
                 }
                 A.array[i]->next = nextnext[i];
             }
+        }
+        if (!flag) {
+            break;
         }
     }
     return A;
@@ -250,7 +255,7 @@ int main(int argc, char* argv[]) {
     omp_set_num_threads(n_t);
 
     cout << "n = " << n << endl;
-    compact_array(n);
+    // compact_array(n);
     doprefixsum<int>(n, 1);
 
     return 0;
